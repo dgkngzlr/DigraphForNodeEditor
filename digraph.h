@@ -1,5 +1,4 @@
 #pragma once
-#include <climits>
 #include <assert.h>
 
 #include <vector>
@@ -7,6 +6,7 @@
 #include <unordered_map>
 #include <queue>
 
+// Directed Acyclic Graph implementation
 template<typename T>
 class Digraph {
 private:
@@ -17,6 +17,8 @@ private:
 		std::vector<int> Neighbors;
 
 		const T& Data;
+
+		DigraphNode() : Data(T()) {}
 
 		DigraphNode(int id, const T& data) : Id(id), Data(data) {}
 	};
@@ -135,6 +137,14 @@ inline void Digraph<T>::DeleteEdge(int edge_id) {
 	typename std::unordered_map<int, DigraphEdge>::iterator edge_iter = m_Edges.find(edge_id);
 
 	if (edge_iter != m_Edges.end()) {
+
+		std::vector<int>& from_neighbors = m_Nodes[edge_iter->second.From].Neighbors;
+
+		auto erased = std::find(from_neighbors.begin(), from_neighbors.end(), edge_iter->second.To);
+		if (erased != from_neighbors.end()) {
+			from_neighbors.erase(erased);
+		}
+
 		m_Edges.erase(edge_iter);
 	}
 }
@@ -144,7 +154,9 @@ inline std::vector<int> Digraph<T>::Topsort() {
 
 	std::vector<int> result;
 	std::queue<int> nodes_with_no_incomig_edges;
-	std::unordered_map<int, int> in_degree; // Map to keep track of in-degrees for each node
+
+	// Map to keep track of in-degrees for each node
+	std::unordered_map<int, int> in_degree;
 
 	// Calculate in-degrees for each node
 	for (const auto& node_pair : m_Nodes) {
